@@ -1,0 +1,37 @@
+{
+    "manifest_version": 3,
+    "name": "Advanced Paste",
+    "description": "Special Keybinds for Advanced Pasting",
+    "version": "1.0",
+    "action": {
+        "default_popup": "base.html",
+        "default_icon": "paste.png"
+    },
+    "permissions": [
+        "activeTab",
+        "commands",
+        "clipboardRead"
+    ],
+    "background": {
+        "service_worker": "js/background.js"
+    },
+    "content_scripts": [
+        {
+            "matches": [
+                "<all_urls>"
+            ],
+            "js": [
+                "js/content.js"
+            ]
+        }
+    ],
+    "commands": {
+        "advanced_paste": {
+            "suggested_key": {
+                "default": "Ctrl+Shift+V",
+                "mac": "Command+Shift+V"
+            },
+            "description": "Advanced Paste"
+        }
+    }
+}
