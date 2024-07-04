@@ -1,35 +1,17 @@
 console.log('Content script loaded');
 
-function simulateKeypress(key) {
-    // Create and dispatch the keydown event
-    const keydownEvent = new KeyboardEvent('keydown', {
-        key: key,
-        code: key,
-        keyCode: key.charCodeAt(0),
-        which: key.charCodeAt(0),
-        bubbles: true,
-        cancelable: true
-    });
-    document.dispatchEvent(keydownEvent);
-    console.log(`Simulated keydown: ${key}`);
-
-    // Create and dispatch the keyup event
-    const keyupEvent = new KeyboardEvent('keyup', {
-        key: key,
-        code: key,
-        keyCode: key.charCodeAt(0),
-        which: key.charCodeAt(0),
-        bubbles: true,
-        cancelable: true
-    });
-    document.dispatchEvent(keyupEvent);
-    console.log(`Simulated keyup: ${key}`);
+let typingSpeed = 150;
+function simulateKeypress(element, key) {
+    // Ensure the element is focused
+    element.focus();
+    // Press the key
+    element.value += key;
 }
+
 
 async function getPastedText() {
     try {
-        const text = await navigator.clipboard.readText();
-        return text;
+        return await navigator.clipboard.readText();
     } catch (err) {
         console.error('Failed to read clipboard contents: ', err);
         return '';
@@ -41,17 +23,27 @@ async function typeTextWithRandomSpeed(wordsPerMinute) {
 
     const meanSpeedMsPerChar = (60 / wordsPerMinute) / 5 * 1000;
 
+    // Find the active input element
+    const {activeElement} = document;
+    if (!activeElement || !['INPUT', 'TEXTAREA'].includes(activeElement.tagName)) {
+        console.error('No active input element found');
+        return;
+    }
+
     for (const char of text) {
         const speedDeviation = (Math.random() - 0.5) * meanSpeedMsPerChar * 0.5;
         const speed = Math.max(meanSpeedMsPerChar + speedDeviation, 0);
 
         await new Promise(resolve => setTimeout(resolve, speed));
-        simulateKeypress(char); // You can replace this with actual typing action
+        simulateKeypress(activeElement, char);  // Simulate the keypress on the active element
     }
 }
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === 'advanced_paste') {
-        typeTextWithRandomSpeed(100); // 100 WPM
+        typeTextWithRandomSpeed(typingSpeed); // 100 WPM
+    } else if (request.action === 'set_speed') {
+    typingSpeed = request.speed;
+    console.log(`Typing speed set to: ${typingSpeed} WPM`);
     }
 });
